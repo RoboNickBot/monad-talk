@@ -1,6 +1,6 @@
 # Functional power-levels
 
-## `Maybe`
+## `Maybe a`
 
 * Start with `Maybe`, make a little program with `Map` lookups
 
@@ -9,20 +9,20 @@
 * Program will be ugly and complicated because it does not use any of
   the following typeclass functions
 
-### `Functor`
+### `instance Functor Maybe where...`
 
 * Remind everyone what we can do using the `Functor` instance for
   `Maybe`
 * Use `fmap` to factor code, reducing complexity
 
-### `Applicative`
+### `instance Applicative Maybe where...`
 
 * Try to do something that requires `Applicative`, show that our
   `Functor` abilities break down
 * Write extra code to do the thing, then show that it's the
   implementation for applicative
 
-### `Monad`
+### `instance Monad Maybe where...`
 
 * Now try to do something Monadic
 * Chaining together lookups using `<*>` produces ugly, nested `Maybe`
@@ -44,7 +44,7 @@
 * Explain (or try to...) what I mean by a "value in a context"
     * The context of `Maybe a`: "This value may or may not exist"
 
-## Lists are another Monad
+## `[a]` is another `Monad`
 
 * The context of `[a]`: "There are many alternate possibilites for
   this value"
