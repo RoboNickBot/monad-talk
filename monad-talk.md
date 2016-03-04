@@ -1,5 +1,12 @@
 # Functional power-levels
 
+This talk will attempt to explain the usefulness of the `Functor`,
+`Applicative`, and `Monad` typeclasses.
+
+I will use two concrete instances (`Maybe a` and `[a]`) and show
+specific difficulties with them that can be solved by stepping up to
+the next typeclass on the ladder.
+
 ## `Maybe a`
 
 Start with `Maybe`, make a little program with `Map` lookups
