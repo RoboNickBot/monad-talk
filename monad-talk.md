@@ -2,12 +2,12 @@
 
 ## `Maybe a`
 
-* Start with `Maybe`, make a little program with `Map` lookups
+Start with `Maybe`, make a little program with `Map` lookups
 
     lookup :: Map k v -> k -> Maybe v
 
-* Program will be ugly and complicated because it does not use any of
-  the following typeclass functions
+Program will be ugly and complicated because it does not use any of
+the following typeclass functions
 
 ### `instance Functor Maybe where...`
 
@@ -41,8 +41,13 @@
 
 * Point out that `=<<` is the only operation that interacts with the
   surrounding "context" (`t`)
+* `Applicative` gives an extra ability over `Functor`, but ability to
+  edit the context gives `Monad` the most power
 * Explain (or try to...) what I mean by a "value in a context"
     * The context of `Maybe a`: "This value may or may not exist"
+
+* point out that all `Monad`s are `Applicative`s and all
+  `Applicative`s are `Functor`s
 
 ## `[a]` is another `Monad`
 
@@ -71,10 +76,10 @@
 
 * `Monad` (and `Applicative`!) is very useful, but hard to wrap the
   mind around.
-* Understanding what `Monad` does *in general* is more difficult
-  and less important than understanding *specific* implementations
-  `Monad`, such as `[a]` and `Maybe a`
-* Understanding and using many different implementations is the best
-  way to understand `Monad` in general
+* Understanding what `Monad` does *in general* is more difficult and
+  less important than understanding *specific* instances `Monad`, such
+  as `[a]` and `Maybe a`
+* Understanding and using many different instances is the best way to
+  understand `Monad` in general
 
 [1]: https://en.wikibooks.org/wiki/Haskell/Applicative_functors#A_sliding_scale_of_power
