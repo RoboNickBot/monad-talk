@@ -74,7 +74,11 @@ presence of contextual values.
 
     -- (+) :: Int -> Int -> Int
 
-    -- pure (+) :: Maybe Int -> Maybe Int -> Maybe Int
+    -- pure (+) :: Maybe (Int -> Int -> Int)
+
+    -- pure (+) <*> Just 3 :: Maybe (Int -> Int)
+
+    -- pure (+) <*> Just 3 <*> Just 4 :: Maybe Int
 
     ( (+) <$> Just 3 <*> Just 4 ) == Just 7
 

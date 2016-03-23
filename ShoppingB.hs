@@ -1,4 +1,4 @@
-module Shopping where
+module ShoppingB where
 
 ----------------------------------------------------------------------
 
@@ -54,13 +54,21 @@ fetchItem m n = case M.lookup n m of
 -- FUNCTOR
 
 -- | What should this be?
-mapEither = undefined
+mapEither :: (a -> b) -> Either e a -> Either e b
+mapEither f (Right r) = Right (f r)
+mapEither _ (Left e) = Left e
 
 -- | Check the catalog for the price of an item
 lookPrice :: Either String Item -> Either String Double
-lookPrice mi = case mi of
-                 Right i -> Right (itemPrice i)
-                 Left e -> Left e
+lookPrice = mapEither itemPrice
+-- lookPrice mi = case mi of
+--                  Right i -> Right (itemPrice i)
+--                  Left e -> Left e
+
+modSale :: Double -> Either String Double -> Either String Double
+modSale d = mapEither (* d)
+-- modSale d (Right p) = Right (p * d)
+-- modSale _ (Left e) = Left e
 
 -- | for convenience
 fetchPrice :: Catalog -> String -> Either String Double
@@ -69,22 +77,20 @@ fetchPrice m = lookPrice . fetchItem m
 -- | Prompt the customer for an item and tell them what they owe.
 checkout :: Catalog -> IO ()
 checkout m = do name <- prompt "What do you need today?"
-                printPrice (fetchPrice m name)
+                printPrice ( (fetchPrice m name))
 
 
 -- | All items are %10 off today.
 simpleSale :: Catalog -> IO ()
 simpleSale m = do name <- prompt "Everything is %10 off! Buy something!"
-                  case fetchPrice m name of
-                    Right p -> printPrice (Right (p * 0.90))
-                    Left e -> printPrice (Left e)
-
+                  printPrice (modSale 0.8 (fetchPrice m name))
 
 ----------------------------------------------------------------------
 -- APPLICATIVE
 
 -- | More powerful than 'fmap'...
-applyEither = undefined
+applyEither :: Either String (a -> b) -> Either String a -> Either String b
+applyEither f a = f <*> a
 
 -- | Now we need to operate over two contextual values at once?
 doublesale :: Catalog -> IO ()
@@ -92,10 +98,14 @@ doublesale m =
   do putStrLn "Buy 2 things, get 25% off!"
      name1 <- prompt "Thing 1:"
      name2 <- prompt "Thing 2:"
-     case (fetchPrice m name1, fetchPrice m name2) of
-       (Right p1, Right p2) -> printPrice $ Right ((p1 + p2) * 0.75)
-       (Left e,_) -> printPrice (Left e)
-       (_,Left e) -> printPrice (Left e)
+     let p = applyEither (applyEither (Right (applySale 0.25)) (fetchPrice m name1)) (fetchPrice m name2)
+         p' = applySale 0.25 <$> fetchPrice m name1 <*> fetchPrice m name2
+     printPrice p'
+     -- case (fetchPrice m name1, fetchPrice m name2) of
+     --   (Right p1, Right p2) -> 
+     --     printPrice $ Right (applySale 0.75 p1 p2) -- ((p1 + p2) * 0.75)
+     --   (Left e,_) -> printPrice (Left e)
+     --   (_,Left e) -> printPrice (Left e)
 
 -- | for clarity
 applySale :: Double -> Double -> Double -> Double
@@ -109,12 +119,15 @@ bulkBuy m = do names <- promptMany "List the things you want to buy:"
 
 -- | this is the tricky bit
 getManyPrices :: Catalog -> [String] -> Either String Double
-getManyPrices m (n:ns) = case fetchPrice m n of
-                           Right p -> case getManyPrices m ns of
-                                        Right ps -> Right (p + ps)
-                                        Left e -> Left e
-                           Left e -> Left e
-getManyPrices _ [] = Right 0
+getManyPrices m ns = foldr f (Right 0) ns
+  where f :: String -> Either String Double -> Either String Double
+        f n d = (+) <$> (fetchPrice m n) <*> d
+-- getManyPrices m (n:ns) = case fetchPrice m n of
+--                            Right p -> case getManyPrices m ns of
+--                                         Right ps -> Right (p + ps)
+--                                         Left e -> Left e
+--                            Left e -> Left e
+-- getManyPrices _ [] = Right 0
 
 
 
@@ -122,7 +135,13 @@ getManyPrices _ [] = Right 0
 -- MONAD
 
 -- | At last, the primary Monad function
-eitherChain = undefined
+eitherChain :: (a -> Either String b) -> Either String a -> Either String b
+eitherChain f (Right a) = f a
+eitherChain _ (Left e) = Left e
+
+(=<<*) = eitherChain
+
+infixr 1 =<<*
 
 -- | Errors
 
@@ -143,22 +162,34 @@ inStock i = itemStock i > 0
 
 smartCheckout :: Catalog -> IO ()
 smartCheckout m = 
-  do hasID <- read <$> prompt "Do you have a valid license?"
-     money <- read <$> prompt "How much are you willing to spend?"
+  do hasID <- read <$> prompt "Do you have a valid license?" :: IO Bool
+     money <- read <$> prompt "How much are you willing to spend?" :: IO Double
      name <- prompt "What do you need today?"
-     printPrice (case fetchItem m name of
-                   Right i -> if inStock i
-                                 then if itemRequiresID i
-                                         then if hasID
-                                                 then if itemPrice i > money
-                                                         then Left (moneyEr (itemPrice i))
-                                                         else Right (itemPrice i)
-                                                 else Left legalEr
-                                         else if itemPrice i > money
-                                                 then Left (moneyEr (itemPrice i))
-                                                 else Right (itemPrice i)
-                                 else Left (stockEr (itemName i))
-                   Left e -> Left e)
+
+     (printPrice) (priceRange money . itemPrice =<<* legal hasID =<<* stock =<<* fetchItem m name)
+
+
+
+     -- let foo = (fmap . fmap) (legal hasID) (stock <$> fetchItem m name)
+
+
+     -- printPrice (case (fmap . fmap . fmap) itemPrice foo of
+     --               Right (Right (Right i)) -> Right i
+     --               _ -> Left "whatever")
+     -- printPrice (case fetchItem m name of
+     --               Right i -> if inStock i
+     --                             then if itemRequiresID i
+     --                                     then if hasID
+     --                                             then if itemPrice i > money
+     --                                                     then Left (moneyEr (itemPrice i))
+     --                                                     else Right (itemPrice i)
+     --                                             else Left legalEr
+     --                                     else if itemPrice i > money
+     --                                             then Left (moneyEr (itemPrice i))
+     --                                             else Right (itemPrice i)
+     --                             else Left (stockEr (itemName i))
+     --               Left e -> Left e)
+
 
 
 stock :: Item -> Either String Item
@@ -180,10 +211,20 @@ priceRange r p = if p > r
                     else Right p
 
 ultraCheckout :: Catalog -> IO ()
-ultraCheckout m = do hasID <- prompt "ID?"
-                     money <- prompt "price range?"
+ultraCheckout m = do hasID <- read <$> prompt "ID?" :: IO Bool
+                     money <- read <$> prompt "price range?" :: IO Double
                      names <- promptMany "List items:"
-                     undefined
+                     printPrice (getManyPrices' m (hasID, money) names) 
+
+checkAll :: Catalog -> String -> Bool -> Double -> Either String Double
+checkAll m name hasID money = priceRange money . itemPrice 
+                              =<<* legal hasID 
+                              =<<* stock 
+                              =<<* fetchItem m name
+
+getManyPrices' m (hasID, money) ns = priceRange money =<< foldr f (Right 0) ns
+  where f :: String -> Either String Double -> Either String Double
+        f n d = (+) <$> (checkAll m n hasID money) <*> d
 
 
 ----------------------------------------------------------------------
