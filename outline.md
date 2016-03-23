@@ -7,6 +7,8 @@ I will use two concrete instances (`Maybe a` and `[a]`) and show
 specific difficulties with them that can be solved by stepping up to
 the next typeclass on the ladder.
 
+---
+
 ## `Maybe a`
 
 Start with `Maybe`, make a little program with `Map` lookups
@@ -16,11 +18,15 @@ Start with `Maybe`, make a little program with `Map` lookups
 Program will be ugly and complicated because it does not use any of
 the following typeclass functions
 
+---
+
 ### `instance Functor Maybe where...`
 
 * Remind everyone what we can do using the `Functor` instance for
   `Maybe`
 * Use `fmap` to factor code, reducing complexity
+
+---
 
 ### `instance Applicative Maybe where...`
 
@@ -28,6 +34,8 @@ the following typeclass functions
   `Functor` abilities break down
 * Write extra code to do the thing, then show that it's the
   implementation for applicative
+
+---
 
 ### `instance Monad Maybe where...`
 
@@ -37,6 +45,8 @@ the following typeclass functions
 * Show that one layer of `Maybe` is what we really want
 * Show how sequential `a -> Maybe a` operations can be combined
 * It's the implementation for `Monad`!
+
+---
 
 ## A sliding scale of power
 
@@ -55,6 +65,8 @@ the following typeclass functions
 
 * point out that all `Monad`s are `Applicative`s and all
   `Applicative`s are `Functor`s
+
+---
 
 ## `[a]` is another `Monad`
 
@@ -75,9 +87,13 @@ the following typeclass functions
       values
     * show implementation
 
+---
+
 ## `do` notation? if there's time?
 
 * show how do notation can make common patterns more readable
+
+---
 
 ## Final thoughts
 
